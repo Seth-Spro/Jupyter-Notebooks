@@ -1,0 +1,1184 @@
+CREATE TABLE atom test (
+ Number varchar(1),
+ Letter varchar(1)
+);
+INSERT INTO atom test (Number, Letter)
+VALUES ('1','A'),('1','B'),('3','C')
+
+///
+
+1.) CREATE TABLE animals (
+id bigserial
+ animal varchar(50)
+);
+
+CREATE TABLE species  (
+id bigserial,
+ mammal varchar(50),
+ insect varchar(50),
+ bird varchar(50)
+);
+
+INSERT INTO animals (animals)
+Values ('Lions'),('Elephant'),('Gorilla')
+('Black Widow Spider'), ('Bald Eagle');
+
+INSERT INTO species (mammal, Insect, bird)
+Values ('Lions', 'Black Widow Spider', 'Bald Eagle');
+
+INSERT INTO species (mammal)
+Values ('Gorilla') ('Elephant');
+
+///
+
+SELECT first_name, last_name, school
+FROM teachers
+ORDER BY school, first_name DESC;
+
+SELECT first_name, salary
+FROM teachers
+WHERE first_name LIKE 'S%'AND salary >= 40000
+
+SELECT first_name, last_name
+FROM teachers
+WHERE hire_date >= '2010-01-01'
+ORDER BY salary DESC
+
+///
+
+SELECT 3.14*5^2
+No because the value after the "^" is only one number and Postgres sees it only belongs to the 5
+
+SELECT births_2019, deaths_2019, county_name,
+(births_2019 / (deaths_2019:: numeric)) AS ratio
+FROM us_counties_pop_est_2019
+WHERE state_name LIKE 'New Y%'
+ORDER BY ratio DESC, county_name
+
+SELECT percentile_cont(0.5)
+WITHIN GROUP (ORDER BY pop_est_2019) as median_population
+FROM us_counties_pop_est_2019
+WHERE state_name LIKE 'Cal%'
+
+California had a higher county median
+
+///
+
+CREATE TABLE us_counties_pop_est_2010 (
+    state_fips text,                         -- State FIPS code
+    county_fips text,                        -- County FIPS code
+    region smallint,                         -- Region
+    state_name text,                         -- State name
+    county_name text,                        -- County name
+    estimates_base_2010 integer,             -- 4/1/2010 resident total population estimates base
+    CONSTRAINT counties_2010_key PRIMARY KEY (state_fips, county_fips)
+);
+SELECT c2019.county_name,
+       c2019.state_name,
+       c2019.pop_est_2019 AS pop_2019,
+       c2010.estimates_base_2010 AS pop_2010,
+       c2019.pop_est_2019 - c2010.estimates_base_2010 AS raw_change,
+       round( (c2019.pop_est_2019::numeric - c2010.estimates_base_2010)
+           / c2010.estimates_base_2010 * 100, 1 ) AS pct_change
+FROM us_counties_pop_est_2019 AS c2019
+    JOIN us_counties_pop_est_2010 AS c2010
+ON c2019.state_fips = c2010.state_fips
+    AND c2019.county_fips = c2010.county_fips
+ORDER BY pct_change DESC;
+
+ 1.) The county with the worst percent change in population in Terrel County TX
+
+SELECT '2010' AS year, county_name, estimates_base_2010
+FROM us_counties_pop_est_2010
+UNION
+SELECT '2019' AS year, county_name, pop_est_2019
+FROM us_counties_pop_est_2019;
+
+
+SELECT percentile_cont(0.5) WITHIN GROUP (ORDER BY pct_change) AS median_pct_change
+FROM (
+SELECT c2019.county_name,
+       c2019.state_name,
+       c2019.pop_est_2019 AS pop_2019,
+       c2010.estimates_base_2010 AS pop_2010,
+       c2019.pop_est_2019 - c2010.estimates_base_2010 AS raw_change,
+       round( (c2019.pop_est_2019::numeric - c2010.estimates_base_2010)
+           / c2010.estimates_base_2010 * 100, 1 ) AS pct_change
+FROM us_counties_pop_est_2019 AS c2019
+    JOIN us_counties_pop_est_2010 AS c2010
+ON c2019.state_fips = c2010.state_fips
+    AND c2019.county_fips = c2010.county_fips) AS subquery;
+3.) The median value is -1%
+
+///
+
+CREATE TABLE albums (
+ album_id bigint GENERATED always AS IDENTITY PRIMARY KEY,
+ catalog_code text NOT NULL UNIQUE,
+ title text NOT NULL,
+ artist text NOT NULL,
+ release_date date NOT NULL,
+ genre text NOT NULL,
+ description text,
+ CHECK (release_date >= '2000-01-01')
+);
+
+CREATE TABLE songs (
+ song_id bigint GENERATED always AS IDENTITY PRIMARY KEY,
+ title text NOT NULL,
+ composers text NOT NULL,
+ album_id bigint,
+ FOREIGN KEY (album_id) REFERENCES albums(album_id)
+ CHECK (composers != Taylor_Swift)
+);
+In the albums table, I added a primary key album_id with the GENERATED always AS IDENTITY to automatically generate unique values. I also added a unique constraint on the catalog_code column so that each album has a unique catalog code. I added NOT NULL constraints on the title, artist, release_date, and genre columns so that these values are always present. I also added a check constraint to ensure that the release_date is not earlier than 2000-01-01.
+
+In the songs table, I added a primary key song_id with the GENERATED always AS IDENTITY to automatically generate unique values. I also added a foreign key constraint on the album_id column to link each song to its album in the albums table. The foreign key references the album_id column in the albums table. I also add a check constraint so that none of the songs are composed by Taylor Swift
+
+I would make the catalog_code a natural key because it could be an assigned value made by the manufacture.
+
+The title, artist and composer would be good for indexes because it would make it easier to find a certain song by a certain person/composer. This is helpful because you would be looking for this information regularly
+
+///
+CREATE TABLE pls_fy2018_libraries (
+    stabr text NOT NULL,
+    fscskey text CONSTRAINT fscskey_2018_pkey PRIMARY KEY,
+    libid text NOT NULL,
+    libname text NOT NULL,
+    address text NOT NULL,
+    city text NOT NULL,
+    zip text NOT NULL,
+    county text NOT NULL,
+    phone text NOT NULL,
+    c_relatn text NOT NULL,
+    c_legbas text NOT NULL,
+    c_admin text NOT NULL,
+    c_fscs text NOT NULL,
+    geocode text NOT NULL,
+    lsabound text NOT NULL,
+    startdate text NOT NULL,
+    enddate text NOT NULL,
+    popu_lsa integer NOT NULL,
+    popu_und integer NOT NULL,
+    centlib integer NOT NULL,
+    branlib integer NOT NULL,
+    bkmob integer NOT NULL,
+    totstaff numeric(8,2) NOT NULL,
+    bkvol integer NOT NULL,
+    ebook integer NOT NULL,
+    audio_ph integer NOT NULL,
+    audio_dl integer NOT NULL,
+    video_ph integer NOT NULL,
+    video_dl integer NOT NULL,
+    ec_lo_ot integer NOT NULL,
+    subscrip integer NOT NULL,
+    hrs_open integer NOT NULL,
+    visits integer NOT NULL,
+    reference integer NOT NULL,
+    regbor integer NOT NULL,
+    totcir integer NOT NULL,
+    kidcircl integer NOT NULL,
+    totpro integer NOT NULL,
+    gpterms integer NOT NULL,
+    pitusr integer NOT NULL,
+    wifisess integer NOT NULL,
+    obereg text NOT NULL,
+    statstru text NOT NULL,
+    statname text NOT NULL,
+    stataddr text NOT NULL,
+    longitude numeric(10,7) NOT NULL,
+    latitude numeric(10,7) NOT NULL
+);
+
+CREATE TABLE pls_fy2017_libraries (
+    stabr text NOT NULL,
+    fscskey text CONSTRAINT fscskey_17_pkey PRIMARY KEY,
+    libid text NOT NULL,
+    libname text NOT NULL,
+    address text NOT NULL,
+    city text NOT NULL,
+    zip text NOT NULL,
+    county text NOT NULL,
+    phone text NOT NULL,
+    c_relatn text NOT NULL,
+    c_legbas text NOT NULL,
+    c_admin text NOT NULL,
+    c_fscs text NOT NULL,
+    geocode text NOT NULL,
+    lsabound text NOT NULL,
+    startdate text NOT NULL,
+    enddate text NOT NULL,
+    popu_lsa integer NOT NULL,
+    popu_und integer NOT NULL,
+    centlib integer NOT NULL,
+    branlib integer NOT NULL,
+    bkmob integer NOT NULL,
+    totstaff numeric(8,2) NOT NULL,
+    bkvol integer NOT NULL,
+    ebook integer NOT NULL,
+    audio_ph integer NOT NULL,
+    audio_dl integer NOT NULL,
+    video_ph integer NOT NULL,
+    video_dl integer NOT NULL,
+    ec_lo_ot integer NOT NULL,
+    subscrip integer NOT NULL,
+    hrs_open integer NOT NULL,
+    visits integer NOT NULL,
+    reference integer NOT NULL,
+    regbor integer NOT NULL,
+    totcir integer NOT NULL,
+    kidcircl integer NOT NULL,
+    totpro integer NOT NULL,
+    gpterms integer NOT NULL,
+    pitusr integer NOT NULL,
+    wifisess integer NOT NULL,
+    obereg text NOT NULL,
+    statstru text NOT NULL,
+    statname text NOT NULL,
+    stataddr text NOT NULL,
+    longitude numeric(10,7) NOT NULL,
+    latitude numeric(10,7) NOT NULL
+);
+
+CREATE TABLE pls_fy2016_libraries (
+    stabr text NOT NULL,
+    fscskey text CONSTRAINT fscskey_16_pkey PRIMARY KEY,
+    libid text NOT NULL,
+    libname text NOT NULL,
+    address text NOT NULL,
+    city text NOT NULL,
+    zip text NOT NULL,
+    county text NOT NULL,
+    phone text NOT NULL,
+    c_relatn text NOT NULL,
+    c_legbas text NOT NULL,
+    c_admin text NOT NULL,
+    c_fscs text NOT NULL,
+    geocode text NOT NULL,
+    lsabound text NOT NULL,
+    startdate text NOT NULL,
+    enddate text NOT NULL,
+    popu_lsa integer NOT NULL,
+    popu_und integer NOT NULL,
+    centlib integer NOT NULL,
+    branlib integer NOT NULL,
+    bkmob integer NOT NULL,
+    totstaff numeric(8,2) NOT NULL,
+    bkvol integer NOT NULL,
+    ebook integer NOT NULL,
+    audio_ph integer NOT NULL,
+    audio_dl integer NOT NULL,
+    video_ph integer NOT NULL,
+    video_dl integer NOT NULL,
+    ec_lo_ot integer NOT NULL,
+    subscrip integer NOT NULL,
+    hrs_open integer NOT NULL,
+    visits integer NOT NULL,
+    reference integer NOT NULL,
+    regbor integer NOT NULL,
+    totcir integer NOT NULL,
+    kidcircl integer NOT NULL,
+    totpro integer NOT NULL,
+    gpterms integer NOT NULL,
+    pitusr integer NOT NULL,
+    wifisess integer NOT NULL,
+    obereg text NOT NULL,
+    statstru text NOT NULL,
+    statname text NOT NULL,
+    stataddr text NOT NULL,
+    longitude numeric(10,7) NOT NULL,
+    latitude numeric(10,7) NOT NULL
+);
+
+
+SELECT pls18.stabr,
+ sum(pls18.visits) AS visits_2018,
+ sum(pls17.visits) AS visits_2017,
+ sum(pls16.visits) AS visits_2016,
+ round( (sum(pls18.visits::numeric) - sum(pls17.visits)) /
+  sum(pls17.visits) * 100, 1 ) AS chg_2018_17,
+ round( (sum(pls17.visits::numeric) - sum(pls16.visits)) /
+ sum(pls16.visits) * 100, 1 ) AS chg_2017_16
+FROM pls_fy2018_libraries pls18
+ JOIN pls_fy2017_libraries pls17 ON pls18.fscskey = pls17.fscskey
+ JOIN pls_fy2016_libraries pls16 ON pls18.fscskey = pls16.fscskey
+WHERE pls18.visits >= 0
+ AND pls17.visits >= 0
+ AND pls16.visits >= 0
+GROUP BY pls18.stabr
+ORDER BY chg_2018_17 DESC
+
+1)
+SELECT pls18.stabr,
+ sum(pls18.totstaff) AS totstaff_2018,
+ sum(pls17.totstaff) AS totstaff_2017,
+ sum(pls16.totstaff) AS totstaff_2016,
+ round( (sum(pls18.totstaff::numeric) - sum(pls17.totstaff)) /
+  sum(pls17.totstaff) * 100, 1 ) AS chg_2018_17,
+ round( (sum(pls17.totstaff::numeric) - sum(pls16.totstaff)) /
+ sum(pls16.totstaff) * 100, 1 ) AS chg_2017_16
+FROM pls_fy2018_libraries pls18
+ JOIN pls_fy2017_libraries pls17 ON pls18.fscskey = pls17.fscskey
+ JOIN pls_fy2016_libraries pls16 ON pls18.fscskey = pls16.fscskey
+GROUP BY pls18.stabr
+ORDER BY chg_2018_17 DESC
+
+2.1)
+SELECT pls18.obereg,
+ sum(pls18.visits) AS visits_2018,
+ sum(pls17.visits) AS visits_2017,
+ sum(pls16.visits) AS visits_2016,
+ round( (sum(pls18.visits::numeric) - sum(pls17.visits)) /
+  sum(pls17.visits) * 100, 1 ) AS chg_2018_17,
+ round( (sum(pls17.visits::numeric) - sum(pls16.visits)) /
+ sum(pls16.visits) * 100, 1 ) AS chg_2017_16
+FROM pls_fy2018_libraries pls18
+ JOIN pls_fy2017_libraries pls17 ON pls18.fscskey = pls17.fscskey
+ JOIN pls_fy2016_libraries pls16 ON pls18.fscskey = pls16.fscskey
+WHERE pls18.visits >= 0
+ AND pls17.visits >= 0
+ AND pls16.visits >= 0
+GROUP BY pls18.obereg
+ORDER BY chg_2018_17 DESC
+
+2.2)
+CREATE TABLE regions (
+  obereg CHAR(2) PRIMARY KEY,
+  region VARCHAR(20) NOT NULL
+);
+
+INSERT INTO regions (obereg, region)
+VALUES
+   ('01', 'New England'),
+   ('02', 'Middle Atlantic'),
+   ("04', 'West North Central'),
+   ('05', 'South Atlantic'),
+   ('06', 'East South Central')
+   ('07', 'West South Central')
+   ('08', 'Mountain')
+   ('09', 'Pacific');
+
+  WITH regions AS (
+  SELECT '01' AS obereg, 'New England' AS region
+  UNION
+  SELECT '02', 'Middle Atlantic'
+  UNION
+  SELECT '03', 'East North Central'
+  UNION
+  SELECT '04', 'West North Central'
+  UNION
+  SELECT '05', 'South Atlantic'
+  UNION
+  SELECT '06', 'East South Central'
+  UNION
+  SELECT '07', 'West South Central'
+  UNION
+  SELECT '08', 'Mountain'
+  UNION
+  SELECT '09', 'Pacific'
+)
+SELECT regions.region,
+ sum(pls18.visits) AS visits_2018,
+ sum(pls17.visits) AS visits_2017,
+ sum(pls16.visits) AS visits_2016,
+ round( (sum(pls18.visits::numeric) - sum(pls17.visits)) /
+  sum(pls17.visits) * 100, 1 ) AS chg_2018_17,
+ round( (sum(pls17.visits::numeric) - sum(pls16.visits)) /
+ sum(pls16.visits) * 100, 1 ) AS chg_2017_16
+FROM regions
+ JOIN pls_fy2018_libraries pls18 ON regions.obereg = pls18.obereg
+ JOIN pls_fy2017_libraries pls17 ON pls18.fscskey = pls17.fscskey
+ JOIN pls_fy2016_libraries pls16 ON pls18.fscskey = pls16.fscskey
+WHERE pls18.visits >= 0
+ AND pls17.visits >= 0
+ AND pls16.visits >= 0
+GROUP BY regions.region
+ORDER BY chg_2018_17 DESC
+
+SELECT obereg, regions
+FORM regions
+JOIN regions.obereg ON pls_fy2016_libraries = pls.obereg
+
+3)
+I would use a full outer join because it would return all he columns that do not have matching data
+SELECT pls18.fscskey, pls18.stabr, pls18.obereg,
+  sum(pls18.visits) AS visits_2018,
+  sum(pls17.visits) AS visits_2017,
+  sum(pls16.visits) AS visits_2016,
+FROM pls_fy2018_libraries pls18
+FULL OUTER JOIN pls_fy2017_libraries pls17
+ON pls18.fscskey = pls17.fscskey
+FULL OUTER JOIN pls_fy2016_libraries pls16
+ON pls18.fscskey = pls16.fscskey
+WHERE pls18.visits IS NULL
+   OR pls17.visits IS NULL
+   OR pls16.visits IS NULL;
+
+SELECT
+  min(postcode),
+  max(postcode)
+FROM NY_address
+
+///
+
+Review:
+* DAMA BOK has 11 areas of knowlegde.
+  * In the middle data governence
+  * Data Security
+  * Data storage
+  * Data achritechture
+  * Data Modeling
+* Owners of Data (steward)
+  * Has one person in control who can view everything
+*Data regulations
+  * GDPR
+  * California consumer protection act
+  * SOC2
+  * HIPPA (Has a section on data regulations)
+* SQL
+  * Structured Query Language
+  * Query tables
+  * FROM - Which table you want to get your data from (Table expression)
+  * ORDER BY 1 DESC - Means the first colounm in the SELECT statement ordered by DESC
+  * IN opperator - List of values
+  * SELECT LEFT (colounm.3) - gives first three values
+  * Data Normalization
+    * Create a data model in seperate tables for one large data set
+    * UNIQUE KEY - i.e. email address
+    * PRIMARY KEY - i.e. student id
+    * CONSTRAINT - Limiting data
+  * FULL OUTER JOIN - matches all rows even the null rows
+  * LEFT JOIN - joins the second table form the left
+  * RIGHT JOIN - joins the second table to the right
+  * JOIN - joins them in the order you used in statement - will match each row.
+  * CROSS JOIN - first row one value to all other values in second and so on
+  * INDEX - make query run faster. (Shorten a query)
+    * Aux structure Database saves the the selected rows and coloums in "mini tabel"
+  * Wait until which queries are used often
+  * Sum
+  * AVERAGE, AVG
+  * min
+  * max
+  * count
+  * percentile
+  * Key idea is that all functions have large input and produce one output
+ORDER OF STATEMENTS
+* SELECT - column names
+* FROM - table/ joined tables
+* HAVING (works on the arrange rows) - conditions.
+* GROUP BY (use when doing count)
+* WHERE - conditions
+* ORDER BY - orders column in SELECT statement
+* UNION ALL put the two tables together
+* UNION does the same but ommits the matching rows
+
+SELECT postcode, count(postcode)
+FROM new_york_addresses
+GROUP by postcode DESC
+
+SELECT COUNT(postcode)
+FROM new_york_addresses
+WHERE postcode = '';
+
+SELECT postcode, street_name, street
+FROM new_york_addresses
+WHERE postcode = "10314" AND street_name LIKE '%555%' AND street LIKE '%Bou%'
+
+SELECT longitude, latitude, street, street_name
+FROM new_york_addresses
+WHERE street = 'STATEN ISLAND BOULEVARD' AND street_number = '555'
+
+SELECT street, count(street)
+FROM new_york_addresses
+GROUP BY street
+WHERE street LIKE '%WHITE%' AND street LIKE '%AVE%'
+
+SELECT county_name, state_name, pop_est_2019
+FROM us_counties_pop_est_2019
+WHERE county_name LIKE '%McK%'
+
+///
+
+Notes:
+* Cloud database (Amazon Redshift, SnowFlake, BigQuery)
+* Onsight database (Oracle)
+* Relational database - tables with rows and column.
+* Database Modeling
+  * Process of representing and communicating data
+  * Thus makes a data model
+  * Customers in database
+    * Has the info about customer
+  * prospects some one who you want to be a customer
+  * Company decide how to model their data
+    * How many tables you have
+    * Which table does the data go
+    * What the different keys are
+    * Which people in the company need to access which table with the correct info
+  * Cleary label table and column to be able to determine what data is in each colum
+    * Do not confuse the data
+  * How to do tables
+    * Short names for tables
+    * Maybe plural or not (look at situation)
+    * Do not use capital letters in table or field name
+    * To underscore instead of spaces i.e. letter_alphabet - yes ; letter alphabet - no
+    * Be some what descriptive to let you know what is in the column
+    * Avoid SQL statement in table/colounm name
+  * How to do columns
+    * us "id" not "ID" i.e. letter_id not letter_ID
+    * us "id" for column name to help distinguish the columns
+  * Entity-Relationship Diagram
+   * 1-to-many
+    * a share column that in two tables but all other column are different
+   * many-to-many
+    * The tables have one shared columns that is shared across many different other tables with different columns
+  * Normalization
+    * Improve data by keeping each attribute in only one place
+    * Example:
+
+///
+
+CHPT 10
+
+CREATE TABLE meat_poultry_egg_establishments (
+    establishment_number text CONSTRAINT est_number_key PRIMARY KEY,
+    company text,
+    street text,
+    city text,
+    st text,
+    zip text,
+    phone text,
+    grant_date date,
+    activities text,
+    dbas text
+);
+
+CREATE INDEX company_idx ON meat_poultry_egg_establishments (company);
+
+-- Count the rows imported:
+SELECT count(*) FROM meat_poultry_egg_establishments;
+
+SELECT company,
+       street,
+       city,
+       st,
+       count(*) AS address_count
+FROM meat_poultry_egg_establishments
+GROUP BY company, street, city, st
+HAVING count(*) > 1
+ORDER BY company, street, city, st;
+
+SELECT st,
+ count(*) AS st_count
+FROM meat_poultry_egg_establishments
+GROUP BY st
+ORDER BY st
+
+SELECT establishment_number,
+ company,
+ city,
+ st,
+ zip
+FROM meat_poultry_egg_establishments
+WHERE st IS NULL
+
+SELECT company,
+ count(*) AS company_count
+FROM meat_poultry_egg_establishments
+GROUP BY company
+ORDER BY company ASC
+
+SELECT length(zip),
+ count(*) AS length_count
+FROM meat_poultry_egg_establishments
+GROUP BY length(zip)
+ORDER BY length(zip) ASC;
+
+SELECT st,
+ count(*) AS st_count
+FROM meat_poultry_egg_establishments
+WHERE length(zip) < 5
+GROUP BY st
+ORDER BY st ASC;
+
+ALTER TABLE meat_poultry_egg_establishments ADD COLUMN st_copy text;
+UPDATE meat_poultry_egg_establishments
+SET st_copy = st;
+
+CREATE TABLE meat_poultry_egg_establishments_backup AS
+SELECT * FROM meat_poultry_egg_establishments;
+
+SELECT
+ (SELECT count(*) FROM meat_poultry_egg_establishments) AS original,
+ (SELECT count(*) FROM meat_poultry_egg_establishments_backup) AS backup;
+
+ALTER TABLE meat_poultry_egg_establishments ADD COLUMN st_copy text;
+UPDATE meat_poultry_egg_establishments
+SET st_copy = st;
+
+SELECT st,
+ st_copy
+FROM meat_poultry_egg_establishments
+WHERE st IS DISTINCT FROM st_copy
+ORDER BY st;
+
+UPDATE meat_poultry_egg_establishments
+SET st = 'MN'
+WHERE establishment_number = 'V18677A';
+UPDATE meat_poultry_egg_establishments
+SET st = 'AL'
+WHERE establishment_number = 'M45319+P45319';
+170   Chapter 10
+UPDATE meat_poultry_egg_establishments
+SET st = 'WI'
+WHERE establishment_number = 'M263A+P263A+V263A'
+RETURNING establishment_number, company, city, st, zip;
+
+UPDATE meat_poultry_egg_establishments
+SET st = st_copy;
+UPDATE meat_poultry_egg_establishments original
+SET st = backup.st
+FROM meat_poultry_egg_establishments_backup backup
+WHERE original.establishment_number = backup.establishment_number
+
+UPDATE meat_poultry_egg_establishments
+SET company_standard = 'Armour-Eckrich Meats'
+WHERE company LIKE 'Armour%'
+RETURNING company, company_standard
+
+UPDATE meat_poultry_egg_establishments
+SET zip = '00' || zip
+WHERE st IN('PR','VI') AND length(zip) = 3
+
+UPDATE meat_poultry_egg_establishments
+SET zip = '0' || zip
+WHERE st IN('CT','MA','ME','NH','NJ','RI','VT') AND length(zip) = 4
+
+CREATE TABLE state_regions (
+ st text CONSTRAINT st_key PRIMARY KEY,
+ region text NOT NULL
+);
+
+ALTER TABLE meat_poultry_egg_establishments
+ ADD COLUMN inspection_deadline timestamp with time zone;
+1 UPDATE meat_poultry_egg_establishments establishments
+2 SET inspection_deadline = '2022-12-01 00:00 EST'
+3 WHERE EXISTS (SELECT state_regions.region
+ FROM state_regions
+ WHERE establishments.st = state_regions.st
+ AND state_regions.region = 'New England')
+
+ SELECT st, inspection_deadline
+FROM meat_poultry_egg_establishments
+GROUP BY st, inspection_deadline
+ORDER BY st;
+
+DELETE FROM meat_poultry_egg_establishments
+WHERE st IN('AS','GU','MP','PR','VI');
+
+START TRANSACTION;
+UPDATE meat_poultry_egg_establishments
+2 SET company = 'AGRO Merchantss Oakland LLC'
+WHERE company = 'AGRO Merchants Oakland, LLC';
+3 SELECT company
+FROM meat_poultry_egg_establishments
+WHERE company LIKE 'AGRO%'
+ORDER BY company;
+4 ROLLBACK
+
+CREATE TABLE meat_poultry_egg_establishments_backup AS
+1 SELECT *,
+ 2 '2023-02-14 00:00 EST'::timestamp with time zone AS reviewed_date
+FROM meat_poultry_egg_establishments
+
+ALTER TABLE meat_poultry_egg_establishments
+ RENAME TO meat_poultry_egg_establishments_temp;
+2 ALTER TABLE meat_poultry_egg_establishments_backup
+ RENAME TO meat_poultry_egg_establishments;
+3 ALTER TABLE meat_poultry_egg_establishments_temp
+ RENAME TO meat_poultry_egg_establishments_backup
+
+1.)
+ALTER TABLE meat_poultry_egg_establishments ADD COLUMN  meat_processing boolean
+ALTER TABLE meat_poultry_egg_establishments ADD COLUMN poultry_processing boolean
+
+2.)
+UPDATE meat_poultry_egg_establishments
+  SET meat_processing = TRUE
+  WHERE activities ILIKE '%Meat%processing%'
+
+UPDATE meat_poultry_egg_establishments
+  SET poultry_processing = TRUE
+  WHERE activities ILIKE '%Poultry%processing%'
+
+3.)
+(RUN each command separately)
+SELECT count(company)
+FROM meat_poultry_egg_establishments
+WHERE meat_processing = TRUE
+
+SELECT count(company)
+FROM meat_poultry_egg_establishments
+WHERE poultry_processing = TRUE
+
+SELECT count(company)
+FROM meat_poultry_egg_establishments
+WHERE meat_processing = TRUE AND poultry_processing= TRUE
+
+SELECT
+  (SELECT COUNT(company) FROM meat_poultry_egg_establishments WHERE meat_processing = TRUE) AS meat_processing_count,
+  (SELECT COUNT(company) FROM meat_poultry_egg_establishments WHERE poultry_processing = TRUE) AS poultry_processing_count,
+  (SELECT COUNT(company) FROM meat_poultry_egg_establishments WHERE meat_processing = TRUE AND poultry_processing = TRUE) AS both_processing_count;
+
+SELECT count(us_counties_pop_est_2010state_name)
+FROM us_counties_pop_est_2010 LEFT JOIN us_counties_pop_est_2019
+ON us_counties_pop_est_2010.state_name = us_counties_pop_est_2019.state_name
+WHERE us_counties_pop_est_2019.state_name != 'Florida'
+
+UPDATE new_york_addresses
+SET postcode = '10007'
+WHERE street = 'CHURCH STREET' AND postcode IS NULL
+
+BEGIN;
+DELETE FROM new_york_addresses
+WHERE street IS NULL AND postcode IS NULL
+
+///
+
+CHPT 11
+
+CREATE TABLE acs_2014_2018_stats (
+ geoid text CONSTRAINT geoid_key PRIMARY KEY,
+ county text NOT NULL,
+ st text NOT NULL,
+ pct_travel_60_min numeric(5,2),
+ pct_bachelors_higher numeric(5,2),
+ pct_masters_higher numeric(5,2),
+ median_hh_income integer,
+CHECK (pct_masters_highzr <= pct_bachelors_higher)
+);
+SELECT * FROM acs_2014_2018_stats
+
+SELECT corr(median_hh_income, pct_bachelors_higher)
+ AS bachelors_income_r
+FROM acs_2014_2018_stats
+
+SELECT
+ round(
+ regr_slope(median_hh_income, pct_bachelors_higher)::numeric, 2
+ ) AS slope,
+ round(
+ regr_intercept(median_hh_income, pct_bachelors_higher)::numeric, 2
+ ) AS y_intercept
+FROM acs_2014_2018_stats
+
+SELECT round(
+ regr_r2(median_hh_income, pct_bachelors_higher)::numeric, 3
+ ) AS r_squared
+FROM acs_2014_2018_stats
+
+SELECT round(
+ regr_r2(median_hh_income, pct_bachelors_higher)::numeric, 3
+ ) AS r_squared
+FROM acs_2014_2018_stats
+
+CREATE TABLE cbp_naics_72_establishments (
+ state_fips text,
+ county_fips text,
+ county text NOT NULL,
+ st text NOT NULL,
+ naics_2017 text NOT NULL,
+ naics_2017_label text NOT NULL,
+ year smallint NOT NULL,
+ establishments integer NOT NULL,
+ CONSTRAINT cbp_fips_key PRIMARY KEY (state_fips, county_fips)
+);
+
+SELECT
+ cbp.county,
+ cbp.st,
+ cbp.establishments,
+ pop.pop_est_2018,
+ round( (cbp.establishments::numeric / pop.pop_est_2018) * 1000, 1 )
+ AS estabs_per_1000
+FROM cbp_naics_72_establishments cbp JOIN us_counties_pop_est_2019 pop
+ ON cbp.state_fips = pop.state_fips
+ AND cbp.county_fips = pop.county_fips
+WHERE pop.pop_est_2018 >= 50000
+ORDER BY cbp.establishments::numeric / pop.pop_est_2018 DESC
+
+CREATE TABLE us_exports (
+ year smallint,
+ month smallint,
+ citrus_export_value bigint,
+ soybeans_export_value bigint
+);
+
+SELECT year, month, citrus_export_value,
+ round(
+ avg(citrus_export_value)
+ OVER(ORDER BY year, month
+ ROWS BETWEEN 11 PRECEDING AND CURRENT ROW), 0)
+ AS twelve_month_avg
+FROM us_exports
+ORDER BY year, month;
+
+1.)
+SELECT corr(median_hh_income, pct_masters_higher)
+ AS masters_income_r
+FROM acs_2014_2018_stats
+The r values is about 0.6 which is lower. This is because a person with masters degree will be more likely to earn a large salary than the median household thus the correlation between the two are lower
+
+2.)
+SELECT year, month, soybeans_export_value,
+ round(
+ avg(soybeans_export_value)
+ OVER(ORDER BY year, month
+ ROWS BETWEEN 11 PRECEDING AND CURRENT ROW), 0)
+ AS soybean_twelve_month_avg
+FROM us_exports
+ORDER BY year, month;
+
+In the graph the demand for soybeans increase in the last three months of the year. And from 2002 the rolling average of soybeans export values has increased.
+
+3.)
+SELECT
+ libname,
+ libid,
+ visits,
+ popu_lsa,
+ round ((visits::numeric /popu_lsa) * 1000, 1 )
+ AS vists_per_1000
+FROM pls_fy2018_libraries
+WHERE popu_lsa >= 250000
+ORDER BY visits::numeric /popu_lsa DESC
+
+///
+
+CHPTR 12
+
+CREATE TABLE current_time_example (
+ time_id integer GENERATED ALWAYS AS IDENTITY,
+ current_timestamp_col timestamptz,
+ clock_timestamp_col timestamptz
+);
+INSERT INTO current_time_example
+ (current_timestamp_col, clock_timestamp_col)
+ (SELECT current_timestamp,
+ clock_timestamp()
+ FROM generate_series(1,1000));
+SELECT * FROM current_time_example;
+
+CREATE TABLE nyc_yellow_taxi_trips (
+    trip_id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    vendor_id text NOT NULL,
+    tpep_pickup_datetime timestamptz NOT NULL,
+    tpep_dropoff_datetime timestamptz NOT NULL,
+    passenger_count integer NOT NULL,
+    trip_distance numeric(8,2) NOT NULL,
+    pickup_longitude numeric(18,15) NOT NULL,
+    pickup_latitude numeric(18,15) NOT NULL,
+    rate_code_id text NOT NULL,
+    store_and_fwd_flag text NOT NULL,
+    dropoff_longitude numeric(18,15) NOT NULL,
+    dropoff_latitude numeric(18,15) NOT NULL,
+    payment_type text NOT NULL,
+    fare_amount numeric(9,2) NOT NULL,
+    extra numeric(9,2) NOT NULL,
+    mta_tax numeric(5,2) NOT NULL,
+    tip_amount numeric(9,2) NOT NULL,
+    tolls_amount numeric(9,2) NOT NULL,
+    improvement_surcharge numeric(9,2) NOT NULL,
+    total_amount numeric(9,2) NOT NULL
+);
+
+SELECT (tpep_pickup_datetime::timestamptz - tpep_dropoff_datetime) AS diff
+FROM nyc_yellow_taxi_trips
+ORDER BY diff ASC
+
+1.)
+SELECT (tpep_dropoff_datetime::timestamptz - tpep_pickup_datetime) AS diff, tpep_pickup_datetime, tpep_dropoff_datetime
+FROM nyc_yellow_taxi_trips
+ORDER BY diff DESC
+The longest trips are one day. Which means that the taxi driver probably forgot to accurately record the time. There are rides that have negative values.
+
+2.)
+SELECT
+  'London' AS city,
+  '2100-01-01 00:00:00-05' AT TIME ZONE 'GMT',
+  'Johannesburg' AS city,
+  '2100-01-01 00:00:00-05' AT TIME ZONE 'SAST',
+  'Moscow' AS city,
+  '2100-01-01 00:00:00-05' AT TIME ZONE 'MSK',
+  'Melbourne' AS city,
+  '2100-01-01 00:00:00-05' AT TIME ZONE 'AEDT'
+
+3.)
+SELECT corr(EXTRACT(epoch FROM (tpep_dropoff_datetime::timestamptz - tpep_pickup_datetime))/60.0, total_amount),
+      regr_r2(EXTRACT(epoch FROM (tpep_dropoff_datetime::timestamptz - tpep_pickup_datetime))/60.0, total_amount),
+      corr(trip_distance, total_amount),
+      regr_r2(trip_distance, total_amount)
+FROM nyc_yellow_taxi_trips
+WHERE (tpep_dropoff_datetime::timestamptz - tpep_pickup_datetime) <= '03:00:00';
+
+SELECT avg(tpep_dropoff_datetime::timestamptz - tpep_pickup_datetime), date_part(hour,)
+
+///
+
+CHPTR 13
+
+SELECT county_name,
+ state_name,
+ pop_est_2019
+FROM us_counties_pop_est_2019
+WHERE pop_est_2019 >= (
+ SELECT percentile_cont(.9) WITHIN GROUP (ORDER BY pop_est_2019)
+ FROM us_counties_pop_est_2019
+ )
+ORDER BY pop_est_2019 DESC
+
+CREATE TABLE us_counties_2019_top10 AS
+SELECT * FROM us_counties_pop_est_2019;
+DELETE FROM us_counties_2019_top10
+WHERE pop_est_2019 < (
+ SELECT percentile_cont(.9) WITHIN GROUP (ORDER BY pop_est_2019)
+ FROM us_counties_2019_top10
+ );
+
+ SELECT round(calcs.average, 0) AS average,
+ calcs.median,
+ round(calcs.average - calcs.median, 0) AS median_average_diff
+FROM (
+ SELECT avg(pop_est_2019) AS average,
+ percentile_cont(.5)
+ WITHIN GROUP (ORDER BY pop_est_2019)::numeric AS median
+ FROM us_counties_pop_est_2019
+ )
+AS calcs
+
+SELECT *
+FROM crosstab('SELECT office,
+ flavor,
+ count(*)
+ FROM ice_cream_survey
+ GROUP BY office, flavor
+ ORDER BY office',
+ 'SELECT flavor
+ FROM ice_cream_survey
+ GROUP BY flavor
+ ORDER BY flavor')
+AS (office text,
+ chocolate bigint,
+ strawberry bigint,
+ vanilla bigint);
+
+1.)
+WITH temps_collapsed (station_name, max_temperature_group) AS
+ (SELECT station_name,
+ CASE WHEN max_temp >= 90 THEN '90 or more'
+ WHEN max_temp >= 88 AND max_temp <= 89 THEN '88-89'
+ WHEN max_temp >= 86 AND max_temp <=87  THEN '86-87'
+ WHEN max_temp >= 84 AND max_temp <= 85 THEN '84-85'
+ WHEN max_temp >= 82 AND max_temp <= 83 THEN '82-83'
+ WHEN max_temp >= 80 AND max_temp <=81  THEN '80-82'
+ WHEN max_temp <= 79 THEN '79 or less'
+ ELSE 'No reading'
+ END
+ FROM temperature_readings)
+SELECT station_name, max_temperature_group, count(*)
+FROM temps_collapsed
+WHERE station_name ILIKE 'Waikiki%'
+GROUP BY station_name, max_temperature_group
+ORDER BY station_name, count(*) DESC
+
+2.)
+SELECT *
+FROM crosstab('SELECT flavor,
+ office,
+ count(*)
+ FROM ice_cream_survey
+ GROUP BY flavor, office
+ ORDER BY flavor',
+ 'SELECT office
+ FROM ice_cream_survey
+ GROUP BY office
+ ORDER BY office')
+AS (flavour text,
+ uptown bigint,
+ midtown bigint,
+ downtown bigint);
+You have to swap flavor and office in the first select statement and in all the group by and order by statements as wells as labeling the column as flavor
+Yes, the counts are different\
+
+  SELECT county_fips
+  FROM us_counties_pop_est_2019
+  WHERE NOT EXISTS (
+      SELECT county_fips
+      FROM us_counties_pop_est_2010
+      WHERE county_fips = us_counties_pop_est_2019.county_fips
+  );
+
+SELECT *,
+      CASE WHEN salary <= 75000 THEN 'LOW'
+    WHEN 75000 <= salary <= 100000
+    ELSE 'HIGH'
+    END
+  FROM employees);
+SELECT salary count(*)
+
+///
+
+CHPTR
+
+1.)
+CREATE MATERIALIZED VIEW taxi_trips_per_hour_mv AS
+SELECT
+    date_part('hour', tpep_pickup_datetime) AS trip_hour,
+    count(*)
+FROM nyc_yellow_taxi_trips
+GROUP BY trip_hour
+ORDER BY trip_hour;
+
+REFRESH MATERIALIZED VIEW taxi_trips_per_hour_mv; to refresh the view
+
+2.)
+
+CREATE FUNCTION rate_per_thousand(observed_number INT, base_number INT, decimal_places INT)
+RETURNS NUMERIC
+AS $$
+BEGIN
+    RETURN ROUND(observed_number / base_number::NUMERIC * 1000, decimal_places);
+END;
+$$ LANGUAGE plpgsql;
+
+3.)
+CREATE OR REPLACE FUNCTION add_inspect_dead()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.inspect_dead := NOW() + INTERVAL '6 months';
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER add_inspect_dead_trgr
+BEFORE INSERT ON meat_poultry_egg_establishments
+FOR EACH ROW
+EXECUTE FUNCTION add_inspect_dead();
+mnhy nbvcxzasdfghjkmkiuytre ikjhgfds swertyh i asdfghjm a sdfgtyujhgfdedcvbnhyt
+
+1.)
+SELECT complaint_type, count(*) AS common_complaints
+FROM `bigquery-public-data.new_york_311.311_service_requests`
+WHERE EXTRACT(year from created_date) = 2021
+GROUP BY complaint_type
+ORDER BY count(*) DESC
+
+///
+
+BIQQUERY WORK
+
+SELECT start_station_name, end_station_name, count(*) AS common_route,
+FROM `bigquery-public-data.new_york_citibike.citibike_trips`
+GROUP BY start_station_name, end_station_name
+ORDER BY count(*) DESC
+LIMIT 6
+
+SELECT shot_type, three_point_shot, count(*) AS three_points_before_35min
+FROM `bigquery-public-data.ncaa_basketball.mbb_pbp_sr`
+WHERE shot_type = 'jump shot' AND three_point_shot IS NOT NULL AND (elapsed_time_sec <= 2100 OR elapsed_time_sec > 2100)
+GROUP BY shot_type, three_point_shot
+ORDER BY count(*)
+LIMIT 1000
+
+SELECT *
+FROM(
+  (SELECT shot_type, three_point_shot, count(*
+  FROM `bigquery-public-data.ncaa_basketball.mbb_pbp_sr`
+  WHERE shot_type = 'jump shot' AND three_point_shot IS NOT NULL AND elapsed_time_sec <= 2100
+  GROUP BY shot_type, three_point_shot
+  ORDER BY count(*))
+  (SELECT shot_type, three_point_shot, count(*
+  FROM `bigquery-public-data.ncaa_basketball.mbb_pbp_sr`
+  WHERE shot_type = 'jump shot' AND three_point_shot IS NOT NULL AND elapsed_time_sec > 2100
+  GROUP BY shot_type, three_point_shot
+  ORDER BY count(*))
+  )
+
+  SELECT shot_type, three_point_shot, COUNT(*) AS three_points_count
+  FROM (
+    SELECT shot_type, three_point_shot
+    FROM `bigquery-public-data.ncaa_basketball.mbb_pbp_sr`
+    WHERE shot_type = 'jump shot' AND three_point_shot IS NOT NULL AND elapsed_time_sec <= 2100
+    UNION ALL
+    SELECT shot_type, three_point_shot
+    FROM `bigquery-public-data.ncaa_basketball.mbb_pbp_sr`
+    WHERE shot_type = 'jump shot' AND three_point_shot IS NOT NULL AND elapsed_time_sec > 2100
+  )
+  GROUP BY shot_type, three_point_shot
+  ORDER BY three_points_count DESC
+
+  SELECT three_made_before_35min.shot_type, three_made_before_35min.three_point_shot, COUNT(*) AS three_points_count
+  FROM (
+    SELECT shot_type, three_point_shot
+    FROM `bigquery-public-data.ncaa_basketball.mbb_pbp_sr`
+    WHERE shot_type = 'jump shot' AND three_point_shot IS NOT NULL AND elapsed_time_sec <= 2100
+  ) AS three_made_before_35min
+  JOIN (
+    SELECT shot_type, three_point_shot
+    FROM `bigquery-public-data.ncaa_basketball.mbb_pbp_sr`
+    WHERE shot_type = 'jump shot' AND three_point_shot IS NOT NULL AND elapsed_time_sec > 2100
+  ) AS three_made_after_35min
+  ON 1=1
+  GROUP BY three_made_before_35min.shot_type, three_made_before_35min.three_point_shot
+  ORDER BY three_points_count DESC
+
+  SELECT county_name,
+   state_name,
+   pop_est_2019
+  FROM us_counties_pop_est_2019
+  WHERE pop_est_2019 >= (
+   SELECT percentile_cont(.9) WITHIN GROUP (ORDER BY pop_est_2019)
+   FROM us_counties_pop_est_2019
+   )
+  ORDER BY pop_est_2019 DESC
+
+  SELECT shot_type, three_point_shot, count(*)
+  FROM `bigquery-public-data.ncaa_basketball.mbb_pbp_sr`
+  WHERE shot_type = 'jump shot' AND three_point_shot IS NOT NULL AND elapsed_time_sec <= 2100
+  GROUP BY shot_type, three_point_shot
+  ORDER BY count(*);
+
+  SELECT shot_type, three_point_shot, count(*)
+  FROM `bigquery-public-data.ncaa_basketball.mbb_pbp_sr`
+  WHERE shot_type = 'jump shot' AND three_point_shot IS NOT NULL AND elapsed_time_sec > 2100
+  GROUP BY shot_type, three_point_shot
+  ORDER BY count(*);
+
+
+  SELECT total_made_before / total_three_before, total_made_after / total_three_after
+  FROM
+    (SELECT shot_type, three_point_shot, COUNT(*) AS three_before_35min
+     FROM `bigquery-public-data.ncaa_basketball.mbb_pbp_sr`
+     WHERE shot_type = 'jump shot' AND three_point_shot IS NOT NULL AND elapsed_time_sec <= 2100
+     GROUP BY shot_type) AS total_three_before
+
+     (SELECT shot_type, count(*)
+     FROM `bigquery-public-data.ncaa_basketball.mbb_pbp_sr`
+     WHERE shot_type = 'jump shot' AND three_point_shot = True
+     GROUP BY shot_type) AS three_made_before
+  JOIN
+    (SELECT shot_type, three_point_shot, COUNT(*) AS three_after_35min
+     FROM `bigquery-public-data.ncaa_basketball.mbb_pbp_sr`
+     WHERE shot_type = 'jump shot' AND three_point_shot IS NOT NULL AND elapsed_time_sec > 2100
+     GROUP BY shot_type,) AS total_three_after
+
+     (SELECT shot_type, count(*)
+     FROM `bigquery-public-data.ncaa_basketball.mbb_pbp_sr`
+     WHERE shot_type = 'jump shot' AND three_point_shot IS NOT NULL
+     GROUP BY shot_type) AS three_made_after_35min
+
+
+
+  FROM `bigquery-public-data.ncaa_basketball.mbb_pbp_sr`
+  WHERE shot_type = 'jump shot' AND three_point_shot IS NOT NULL
+  GROUP BY shot_type
+  ORDER BY count(*);
